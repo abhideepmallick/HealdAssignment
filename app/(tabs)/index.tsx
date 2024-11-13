@@ -7,23 +7,27 @@ import {
   startStepCountSubscription,
   stopStepCountSubscription,
 } from '../services/pedometerService';
+import { startLocationTracking, stopLocationTracking } from '../services/locationService';
 
 export default function Index() {
   const [isPedometerAvailable, setIsPedometerAvailable] = useState('checking');
   const [pastStepCount, setPastStepCount] = useState(0);
   const [currentStepCount, setCurrentStepCount] = useState(0);
   const [isTracking, setIsTracking] = useState(false);
+  const [distanceTravelled, setDistanceTravelled] = useState(0);
 
   const toggleTracking = () => {
     if (isTracking) {
       // Stop tracking
       stopStepCountSubscription();
+      stopLocationTracking();
       setIsTracking(false);
     } else {
       // Start tracking
       checkPedometerAvailability(setIsPedometerAvailable);
       getPastStepCount(setPastStepCount);
       startStepCountSubscription(setCurrentStepCount);
+      startLocationTracking(setDistanceTravelled);
       setIsTracking(true);
     }
   };
@@ -31,6 +35,7 @@ export default function Index() {
   useEffect(() => {
     return () => {
       stopStepCountSubscription();
+      stopLocationTracking();
     };
   }, []);
 
@@ -39,6 +44,9 @@ export default function Index() {
       <View style={styles.cardContainer}>
         <Card value={pastStepCount} title="Total Steps in 24 hours" />
         <Card value={currentStepCount} title="Current Steps" />
+      </View>
+      <View style={[styles.cardContainer , { marginTop: 20, justifyContent: 'flex-start', paddingLeft: 20 }]}>
+        <Card value={`${(distanceTravelled / 1000).toFixed(2)} km`} title="Distance Travelled" />
       </View>
       <View style={styles.buttonContainer}>
         <Button
@@ -70,6 +78,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: '100%',
     flexDirection: 'row',
-    justifyContent: 'space-evenly'
+    justifyContent: 'space-evenly',
+    margin: 20
   },
 });
