@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, Button, SafeAreaView } from 'react-native';
+import { ScrollView, View, StyleSheet, TouchableOpacity, SafeAreaView, Text } from 'react-native';
 import Card from '../components/card';
 import {
   checkPedometerAvailability,
@@ -8,6 +8,7 @@ import {
   stopStepCountSubscription,
 } from '../services/pedometerService';
 import { startLocationTracking, stopLocationTracking } from '../services/locationService';
+import { startTimer, stopTimer, formatElapsedTime } from '../services/timerService';
 
 export default function Index() {
   const [isPedometerAvailable, setIsPedometerAvailable] = useState('checking');
@@ -15,19 +16,20 @@ export default function Index() {
   const [currentStepCount, setCurrentStepCount] = useState(0);
   const [isTracking, setIsTracking] = useState(false);
   const [distanceTravelled, setDistanceTravelled] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0); // Elapsed time in seconds
 
   const toggleTracking = () => {
     if (isTracking) {
-      // Stop tracking
       stopStepCountSubscription();
       stopLocationTracking();
+      stopTimer();
       setIsTracking(false);
     } else {
-      // Start tracking
       checkPedometerAvailability(setIsPedometerAvailable);
       getPastStepCount(setPastStepCount);
       startStepCountSubscription(setCurrentStepCount);
       startLocationTracking(setDistanceTravelled);
+      startTimer(setElapsedTime);
       setIsTracking(true);
     }
   };
@@ -36,24 +38,27 @@ export default function Index() {
     return () => {
       stopStepCountSubscription();
       stopLocationTracking();
+      stopTimer();
     };
   }, []);
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.cardContainer}>
-        <Card value={pastStepCount} title="Total Steps in 24 hours" />
-        <Card value={currentStepCount} title="Current Steps" />
-      </View>
-      <View style={[styles.cardContainer , { marginTop: 20, justifyContent: 'flex-start', paddingLeft: 20 }]}>
-        <Card value={`${(distanceTravelled / 1000).toFixed(2)} km`} title="Distance Travelled" />
-      </View>
-      <View style={styles.buttonContainer}>
-        <Button
-          title={isTracking ? "Stop Tracking" : "Start Tracking"}
-          onPress={toggleTracking}
-        />
-      </View>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.cardContainer}>
+          <Card value={pastStepCount} title="Total Steps in 24 hours" />
+          <Card value={currentStepCount} title="Current Steps" />
+        </View>
+        <View style={styles.cardContainer}>
+          <Card value={`${(distanceTravelled / 1000).toFixed(2)} km`} title="Distance Travelled" />
+          <Card value={formatElapsedTime(elapsedTime)} title="Time Elapsed" />
+        </View>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={toggleTracking}>
+            <Text style={styles.buttonText}>{isTracking ? "Stop Tracking" : "Start Tracking"}</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -62,23 +67,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#25292e',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
   },
-  text: {
-    color: '#fff',
-    marginBottom: 20,
+  scrollViewContent: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  cardContainer: {
+    width: '90%', // Ensure the container stays within screen bounds
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 10,
   },
   buttonContainer: {
     marginTop: 20,
-    width: '100%',
+    width: '80%',
     alignItems: 'center',
   },
-  cardContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    margin: 20
+  button: {
+    // backgroundColor: '#ffffff',
+    borderColor: '#ffd33d',
+    borderWidth: 2,
+    borderRadius: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#ffd33d',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
