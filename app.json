@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "HealdAssignment",
-    "slug": "HealdAssignment",
+    "slug": "healdassignment",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,13 +9,19 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.abhideepmallick.healdassignment"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.abhideepmallick.healdassignment"
     },
     "web": {
       "bundler": "metro",
@@ -42,6 +48,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "e79a5e83-5134-4773-9626-e22ca106c93a"
+      }
+    },
+    "owner": "abhideepmallick"
   }
 }
