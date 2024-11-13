@@ -24,12 +24,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 3, // For Android shadow
-    width: 150,
-    height: 100,
+    elevation: 3,
+    width: 180,
+    height: 200,
   },
   value: {
-    fontSize: 24,
+    fontSize: 44,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 10,

@@ -1,62 +1,45 @@
 import { useState, useEffect } from 'react';
 import { Text, View, StyleSheet, Button, SafeAreaView } from 'react-native';
-import { Pedometer } from 'expo-sensors';
 import Card from '../components/card';
+import {
+  checkPedometerAvailability,
+  getPastStepCount,
+  startStepCountSubscription,
+  stopStepCountSubscription,
+} from '../services/pedometerService';
 
 export default function Index() {
   const [isPedometerAvailable, setIsPedometerAvailable] = useState('checking');
   const [pastStepCount, setPastStepCount] = useState(0);
   const [currentStepCount, setCurrentStepCount] = useState(0);
   const [isTracking, setIsTracking] = useState(false);
-  let subscription = null;
-
-  const subscribe = async () => {
-    const isAvailable = await Pedometer.isAvailableAsync();
-    setIsPedometerAvailable(String(isAvailable));
-
-    if (isAvailable) {
-      const end = new Date();
-      const start = new Date();
-      start.setDate(end.getDate() - 1);
-
-      const pastStepCountResult = await Pedometer.getStepCountAsync(start, end);
-      if (pastStepCountResult) {
-        setPastStepCount(pastStepCountResult.steps);
-      }
-
-      subscription = Pedometer.watchStepCount(result => {
-        setCurrentStepCount(result.steps);
-      });
-    }
-  };
 
   const toggleTracking = () => {
     if (isTracking) {
       // Stop tracking
-      if (subscription) {
-        subscription.remove();
-        subscription = null;
-      }
+      stopStepCountSubscription();
       setIsTracking(false);
     } else {
       // Start tracking
-      subscribe();
+      checkPedometerAvailability(setIsPedometerAvailable);
+      getPastStepCount(setPastStepCount);
+      startStepCountSubscription(setCurrentStepCount);
       setIsTracking(true);
     }
   };
 
   useEffect(() => {
     return () => {
-      if (subscription) subscription.remove();
+      stopStepCountSubscription();
     };
   }, []);
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.text}>Pedometer Available: {isPedometerAvailable}</Text>
-      <Card value={pastStepCount} title="Steps in the last 24 hours" />
-      <Card value={currentStepCount} title="Current Steps" />
-      
+      <View style={styles.cardContainer}>
+        <Card value={pastStepCount} title="Total Steps in 24 hours" />
+        <Card value={currentStepCount} title="Current Steps" />
+      </View>
       <View style={styles.buttonContainer}>
         <Button
           title={isTracking ? "Stop Tracking" : "Start Tracking"}
@@ -83,5 +66,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
     width: '100%',
     alignItems: 'center',
+  },
+  cardContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-evenly'
   },
 });
