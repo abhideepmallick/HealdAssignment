@@ -30,3 +30,11 @@ export const stopStepCountSubscription = () => {
     subscription = null;
   }
 };
+
+export const formatHourLabel = (date) => {
+  let hours = date.getHours();
+  const minutes = "00";
+  const period = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${hours} ${period}`;
+};
