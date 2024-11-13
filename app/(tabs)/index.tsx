@@ -24,10 +24,19 @@ export default function Index() {
       stopLocationTracking();
       stopTimer();
       setIsTracking(false);
+      setCurrentStepCount(0);
+      setDistanceTravelled(0);
+      setElapsedTime(0);
     } else {
       checkPedometerAvailability(setIsPedometerAvailable);
       getPastStepCount(setPastStepCount);
-      startStepCountSubscription(setCurrentStepCount);
+      startStepCountSubscription((stepCount) => {
+        setCurrentStepCount(stepCount);
+        if (stepCount === 0) {
+          // Set distance to 0 if step count is 0
+          setDistanceTravelled(0); 
+        }
+      });
       startLocationTracking(setDistanceTravelled);
       startTimer(setElapsedTime);
       setIsTracking(true);
