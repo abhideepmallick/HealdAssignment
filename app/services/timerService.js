@@ -1,11 +1,12 @@
+let startTimestamp = null;
 let timerInterval = null;
-let elapsedTime = 0;
 
 export const startTimer = (setElapsedTime) => {
-  elapsedTime = 0;
+  startTimestamp = Date.now();
+  
   timerInterval = setInterval(() => {
-    elapsedTime += 1;
-    setElapsedTime(elapsedTime);
+    const elapsedSeconds = Math.floor((Date.now() - startTimestamp) / 1000);
+    setElapsedTime(elapsedSeconds);
   }, 1000);
 };
 
@@ -14,6 +15,7 @@ export const stopTimer = () => {
     clearInterval(timerInterval);
     timerInterval = null;
   }
+  startTimestamp = null;
 };
 
 export const formatElapsedTime = (seconds) => {
