@@ -1,12 +1,11 @@
-import * as Location from 'expo-location'; // Import Expo's location module
+import * as Location from 'expo-location';
 
-// Variables to hold the location subscription and the previous location for distance calculation
 let locationSubscription = null;
 let previousLocation = null;
 
 // Function to calculate the distance between two locations using the Haversine formula
 const calculateDistance = (start, end) => {
-  const toRad = x => (x * Math.PI) / 180; // Helper function to convert degrees to radians
+  const toRad = (x) => (x * Math.PI) / 180; // Helper function to convert degrees to radians
   const R = 6371e3; // Earth's radius in meters
 
   const dLat = toRad(end.latitude - start.latitude); // Difference in latitude in radians
@@ -25,28 +24,31 @@ const calculateDistance = (start, end) => {
 };
 
 // Function to start tracking location and calculate distance travelled
-export const startLocationTracking = async setDistanceTravelled => {
-  // Request foreground location permissions from the user
+export const startLocationTracking = async (setDistanceTravelled) => {
   const { status } = await Location.requestForegroundPermissionsAsync();
   if (status !== 'granted') {
-    console.error("Location permission not granted"); // Log error if permission is not granted
+    console.error("Location permission not granted");
     return;
   }
 
-  // Start listening to location updates with specified accuracy and intervals
+  previousLocation = null; // Ensure previousLocation is reset at the start
+
   locationSubscription = await Location.watchPositionAsync(
     {
-      accuracy: Location.Accuracy.High, // High accuracy for location updates
-      timeInterval: 5000, // Update location every 5 seconds
-      distanceInterval: 1, // Update location if user moves by 1 meter
+      accuracy: Location.Accuracy.High,
+      timeInterval: 5000,
+      distanceInterval: 1,
     },
-    newLocation => {
+    (newLocation) => {
+
       if (previousLocation) {
-        // Calculate distance between previous and current location
         const distance = calculateDistance(previousLocation.coords, newLocation.coords);
-        setDistanceTravelled(prevDistance => prevDistance + distance); // Update total distance travelled
+
+        // Ensure we return the accumulated distance correctly
+        setDistanceTravelled((prevDistance) => prevDistance + distance);
       }
-      previousLocation = newLocation; // Set the current location as previous for the next update
+      
+      previousLocation = newLocation; // Update previous location
     }
   );
 };
@@ -57,4 +59,5 @@ export const stopLocationTracking = () => {
     locationSubscription.remove(); // Remove location subscription
     locationSubscription = null; // Clear the subscription variable
   }
+  previousLocation = null; // Reset previous location for next tracking session
 };

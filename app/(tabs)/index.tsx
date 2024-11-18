@@ -21,34 +21,26 @@ export default function Index() {
   const [elapsedTime, setElapsedTime] = useState(0); // Elapsed time in seconds since tracking started
 
   // Function to toggle tracking on and off
-  const toggleTracking = () => {
+  const toggleTracking = async () => {
     if (isTracking) {
-      // Stop tracking: stop step count, location, and timer
       stopStepCountSubscription();
       stopLocationTracking();
       stopTimer();
-      setIsTracking(false); // Update tracking status
-      setCurrentStepCount(0); // Reset current step count
-      setDistanceTravelled(0); // Reset distance travelled
-      setElapsedTime(0); // Reset elapsed time
+      setIsTracking(false);
+      setCurrentStepCount(0);
+      setDistanceTravelled(0); // Reset distance travelled only when stopping
+      setElapsedTime(0);
     } else {
-      // Start tracking: check pedometer availability, retrieve past steps, and start tracking
-      checkPedometerAvailability(setIsPedometerAvailable);
-      getPastStepCount(setPastStepCount); // Retrieve step count from past 24 hours
 
-      // Start step count subscription with an update callback
-      startStepCountSubscription((stepCount) => {
-        setCurrentStepCount(stepCount); // Update current step count
-        if (stepCount === 0) {
-          setDistanceTravelled(0); // Set distance to 0 if step count is 0
-        }
-      });
-
-      startLocationTracking(setDistanceTravelled); // Start location tracking to calculate distance
-      startTimer(setElapsedTime); // Start timer for elapsed time
-      setIsTracking(true); // Update tracking status
+      await checkPedometerAvailability(setIsPedometerAvailable);
+      await getPastStepCount(setPastStepCount);
+      startStepCountSubscription(setCurrentStepCount);
+      startLocationTracking(setDistanceTravelled); // Start tracking distance updates
+      startTimer(setElapsedTime);
+      setIsTracking(true);
     }
   };
+  
 
   // Cleanup on component unmount: stop subscriptions and timer
   useEffect(() => {

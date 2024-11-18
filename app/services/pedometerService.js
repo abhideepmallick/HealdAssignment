@@ -1,44 +1,76 @@
-import { Pedometer } from 'expo-sensors'; // Import Pedometer from Expo for step tracking
+import { Pedometer, Accelerometer } from 'expo-sensors';
+import { Platform, PermissionsAndroid } from 'react-native';
 
-let subscription = null; // Variable to hold the step count subscription
+let pedometerSubscription = null;
+let accelerometerSubscription = null;
+let stepCount = 0;
 
 // Function to check if the pedometer sensor is available on the device
 export const checkPedometerAvailability = async (setIsPedometerAvailable) => {
-  const isAvailable = await Pedometer.isAvailableAsync(); // Check pedometer availability
-  setIsPedometerAvailable(String(isAvailable)); // Update the availability state as a string ("true" or "false")
+  if (Platform.OS === 'ios') {
+    const isAvailable = await Pedometer.isAvailableAsync();
+    setIsPedometerAvailable(String(isAvailable));
+  } else {
+    setIsPedometerAvailable('true'); // Assume accelerometer is available on Android
+  }
 };
 
-// Function to get the step count for the past 24 hours
+// Function to get the step count for the past 24 hours (iOS only)
 export const getPastStepCount = async (setPastStepCount) => {
-  const end = new Date(); // Current date and time as the end time
-  const start = new Date(); // Clone of the current date to modify for the start time
-  start.setDate(end.getDate() - 1); // Set start time to 24 hours before the current time
+  if (Platform.OS === 'ios') {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - 1);
 
-  const pastStepCountResult = await Pedometer.getStepCountAsync(start, end); // Fetch step count from start to end
-  if (pastStepCountResult) {
-    setPastStepCount(pastStepCountResult.steps); // Update past step count if data is available
+    const pastStepCountResult = await Pedometer.getStepCountAsync(start, end);
+    if (pastStepCountResult) {
+      setPastStepCount(pastStepCountResult.steps);
+    }
+  } else {
+    setPastStepCount(stepCount); // For Android, initialize with 0 or existing step count
   }
 };
 
 // Function to start a live step count subscription
 export const startStepCountSubscription = (setCurrentStepCount) => {
-  subscription = Pedometer.watchStepCount(result => {
-    setCurrentStepCount(result.steps); // Update the current step count on each step detected
-  });
+  if (Platform.OS === 'ios') {
+    // Use Pedometer for iOS
+    pedometerSubscription = Pedometer.watchStepCount(result => {
+      setCurrentStepCount(result.steps);
+    });
+  } else {
+    // Use Accelerometer for Android
+    accelerometerSubscription = Accelerometer.addListener(accelerometerData => {
+      const { x, y, z } = accelerometerData;
+
+      // Basic threshold to detect movement that could be counted as a step
+      const acceleration = Math.sqrt(x * x + y * y + z * z);
+      if (acceleration > 1.2) { // Adjust this threshold as needed
+        stepCount += 1;
+        setCurrentStepCount(stepCount);
+      }
+    });
+    Accelerometer.setUpdateInterval(500); // Set update interval for accelerometer
+  }
 };
 
 // Function to stop the live step count subscription
 export const stopStepCountSubscription = () => {
-  if (subscription) {
-    subscription.remove(); // Remove the subscription if it exists
-    subscription = null; // Clear the subscription variable
+  if (Platform.OS === 'ios' && pedometerSubscription) {
+    pedometerSubscription.remove();
+    pedometerSubscription = null;
+  }
+  if (Platform.OS === 'android' && accelerometerSubscription) {
+    accelerometerSubscription.remove();
+    accelerometerSubscription = null;
   }
 };
 
 // Utility function to format a given date into a 12-hour format with AM/PM
 export const formatHourLabel = (date) => {
-  let hours = date.getHours(); // Get hours in 24-hour format
-  const period = hours >= 12 ? "PM" : "AM"; // Determine AM or PM based on hours
-  hours = hours % 12 || 12; // Convert to 12-hour format, using 12 instead of 0 for midnight/noon
-  return `${hours} ${period}`; // Return formatted time as "H AM/PM"
+  let hours = date.getHours();
+  const period = hours >= 12 ? "PM" : "AM";
+  // convert to 12 hours instead of 24 hours
+  hours = hours % 12 || 12;
+  return `${hours} ${period}`;
 };
