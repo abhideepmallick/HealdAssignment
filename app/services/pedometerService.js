@@ -44,7 +44,7 @@ export const startStepCountSubscription = (setCurrentStepCount) => {
       const { x, y, z } = accelerometerData;
 
       // Basic threshold to detect movement that could be counted as a step
-      const acceleration = Math.sqrt(x * x + y * y + z * z);
+      const acceleration = Math.sqrt(x * x + y * y + z * z); // acceleration magnitude calculated using Euclidean norm
       if (acceleration > 1.2) { // Adjust this threshold as needed
         stepCount += 1;
         setCurrentStepCount(stepCount);
